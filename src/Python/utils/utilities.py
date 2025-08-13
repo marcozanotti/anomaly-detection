@@ -78,7 +78,7 @@ def stop_logger(logger):
 
     return
 
-def create_file_path(path_list):
+def create_file_path(path_list, sep = '/', end = '/'):
     """Function to create a file path from a list of directories.
 
     Args:
@@ -91,7 +91,7 @@ def create_file_path(path_list):
     if len(path_list) == 1:
         path = path_list[0]
     else:
-        path = '/'.join(str(x) for x in path_list) + '/'
+        path = sep.join(str(x) for x in path_list) + end
 
     return path
 
@@ -169,7 +169,7 @@ def combine_and_save_files(
     else:
         files = files_to_read
 
-    files.sort(key = lambda x: int("".join([i for i in x if i.isdigit()])))
+    # files.sort(key = lambda x: int("".join([i for i in x if i.isdigit()])))
     path_to_write = create_file_path(path_list_to_write)
     if not os.path.exists(path_to_write):
         os.makedirs(path_to_write)
@@ -295,12 +295,13 @@ def get_frequency(frequency):
 
     return freq
 
-def get_dataset_frequency(dataset_name):
+def get_dataset_frequency(dataset_name, series_name = None):
 
     """Function to get the frequency of a specific dataset.
 
     Args:
         dataset_name (str): name of the dataset.
+        series_name (str): name of the time series.
     
     Returns:
         str: frequency.
@@ -308,12 +309,13 @@ def get_dataset_frequency(dataset_name):
 
     module_logger.info(f'Getting {dataset_name} frequency...')
 
-    if dataset_name == 'm5':
-        freq = 'daily'
-    elif dataset_name == 'vn1':
-        freq = 'weekly'
-    elif dataset_name == 'm4':
-        freq = 1
+    if dataset_name == 'nab':
+        if series_name == 'ec2_cpu_utilization_24ae8d':
+            freq = 'daily'
+        elif series_name == 'rogue_agent_key_updown':
+            freq = 'daily'
+        else:
+            raise ValueError(f'Invalid series: {series_name}')
     else:
         raise ValueError(f'Invalid dataset: {dataset_name}')
 

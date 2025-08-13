@@ -1,10 +1,12 @@
 
 import sys
 sys.path.insert(0, 'src/Python/utils')
+import requests
+import json
 import numpy as np
 import pandas as pd
 import pandas_flavor as pf
-from utilities import save_data, load_data, get_frequency, get_dataset_frequency
+from utilities import save_data, load_data, create_file_path, get_frequency, get_dataset_frequency
 
 import logging
 module_logger = logging.getLogger('collect_data')
@@ -24,87 +26,130 @@ def download_data(dataset_name, save = True, ext = '.parquet'):
         pd.DataFrame: training and test dataframes.
     """
 
-    if dataset_name == 'm5':
+    if dataset_name == 'nab':
         
-        module_logger.info(f'Downloading {dataset_name} train dataset...')
-        train_df = pd.read_parquet('https://m5-benchmarks.s3.amazonaws.com/data/train/target.parquet') \
-            .rename(columns = {'item_id': 'unique_id', 'timestamp': 'ds', 'demand': 'y'})
-        module_logger.info(f'Downloading {dataset_name} test dataset...')
-        test_df = pd.read_parquet('https://m5-benchmarks.s3.amazonaws.com/data/test/target.parquet') \
-            .rename(columns = {'item_id': 'unique_id', 'timestamp': 'ds', 'demand': 'y'})
-    
-    elif dataset_name == 'vn1':
+        module_logger.info(f'Downloading {dataset_name} datasets...')
 
-        module_logger.info(f'Downloading {dataset_name} train dataset...')
-        # Phase 0 datset
-        train_df0 = pd.read_csv('data/vn1/Phase 0 - Sales.csv')
-        train_df0['unique_id'] = train_df0['Client'].astype(str) + '_' \
-            + train_df0['Warehouse'].astype(str) + '_' \
-            + train_df0['Product'].astype(str)
-        train_df0.drop(columns = ['Client', 'Warehouse', 'Product'], axis = 1, inplace = True)
-        # Phase 1 dataset
-        train_df1 = pd.read_csv('data/vn1/Phase 1 - Sales.csv')
-        train_df1['unique_id'] = train_df1['Client'].astype(str) + '_' \
-            + train_df1['Warehouse'].astype(str) + '_' \
-            + train_df1['Product'].astype(str)
-        train_df1.drop(columns = ['Client', 'Warehouse', 'Product'], axis = 1, inplace = True)
-        train_df = train_df0 \
-            .merge(train_df1, how = 'left', on = 'unique_id') \
-            .melt(id_vars = 'unique_id', var_name = 'ds', value_name  = 'y')
+        path = 'https://github.com/numenta/NAB/blob/master/data'
+        file_ext = '.csv'
+        file_names = {
+            'artificialNoAnomaly': [
+                'art_daily_no_noise', 
+                'art_daily_perfect_square_wave',
+                'art_daily_small_noise',
+                'art_flatline',
+                'art_noisy'
+            ],
+            'artificialWithAnomaly': [
+                'art_daily_flatmiddle',
+                'art_daily_jumpsdown',
+                'art_daily_jumpsup',
+                'art_daily_nojump',
+                'art_increase_spike_density',
+                'art_load_balancer_spikes'
+            ],
+            'realAWSCloudwatch': [
+                'ec2_cpu_utilization_24ae8d',
+                'ec2_cpu_utilization_53ea38',
+                'ec2_cpu_utilization_5f5533',
+                'ec2_cpu_utilization_77c1ca',
+                'ec2_cpu_utilization_825cc2',
+                'ec2_cpu_utilization_ac20cd',
+                'ec2_cpu_utilization_c6585a',
+                'ec2_cpu_utilization_fe7f93',
+                'ec2_disk_write_bytes_1ef3de',
+                'ec2_disk_write_bytes_c0d644',
+                'ec2_network_in_257a54',
+                'ec2_network_in_5abac7',
+                'elb_request_count_8c0756',
+                'grok_asg_anomaly',
+                'iio_us-east-1_i-a2eb1cd9_NetworkIn',
+                'rds_cpu_utilization_cc0c53',
+                'rds_cpu_utilization_e47b3b'
+            ], 
+            'realAdExchange': [
+                'exchange-2_cpc_results',
+                'exchange-2_cpm_results',
+                'exchange-3_cpc_results',
+                'exchange-3_cpm_results',
+                'exchange-4_cpc_results',
+                'exchange-4_cpm_results'
+            ],
+            'realKnownCause': [
+                'ambient_temperature_system_failure',
+                'cpu_utilization_asg_misconfiguration',
+                'ec2_request_latency_system_failure',
+                'machine_temperature_system_failure',
+                'nyc_taxi',
+                'rogue_agent_key_hold',
+                'rogue_agent_key_updown'
+            ],
+            'realTraffic': [
+                'TravelTime_387',
+                'TravelTime_451',
+                'occupancy_6005',
+                'occupancy_t4013',
+                'speed_6005',
+                'speed_7578',
+                'speed_t4013'
+            ],
+            'realTweets': [
+                'Twitter_volume_AAPL',
+                'Twitter_volume_AMZN',
+                'Twitter_volume_CRM',
+                'Twitter_volume_CVS',
+                'Twitter_volume_FB',
+                'Twitter_volume_GOOG',
+                'Twitter_volume_IBM',
+                'Twitter_volume_KO',
+                'Twitter_volume_PFE',
+                'Twitter_volume_UPS'
+            ]
+        }
+        i = 1
 
-        module_logger.info(f'Downloading {dataset_name} test dataset...')
-        test_df = pd.read_csv('data/vn1/Phase 2 - Sales.csv')
-        test_df['unique_id'] = test_df['Client'].astype(str) + '_' \
-            + test_df['Warehouse'].astype(str) + '_' \
-            + test_df['Product'].astype(str)
-        test_df.drop(columns = ['Client', 'Warehouse', 'Product'], axis = 1, inplace = True)
-        test_df = test_df.melt(id_vars = 'unique_id', var_name = 'ds', value_name  = 'y')
+        # labels
+        module_logger.info('Downloading labels datasets...')
+        labels_url = 'https://github.com/numenta/NAB/blob/master/labels/combined_labels.json?raw=true'
+        resp = requests.get(labels_url)
+        labels = json.loads(resp.text)
 
-    elif dataset_name == 'm4':
+        for k in list(file_names.keys()):
 
-        # if other datasets are needed (like Hourly, Weekly, etc), add all here
-        # creating a single train and test df
-        
-        module_logger.info(f'Downloading {dataset_name} train dataset...')      
-        train_df = pd.read_csv('data/m4/Daily-train.csv')
-        train_df.columns = ['unique_id'] + list(range(1, train_df.shape[1]))
-        train_df = pd.melt(train_df, id_vars = ['unique_id'], var_name = 'ds', value_name = 'y')
-        train_df = train_df.dropna()
-        train_df['ds'] = train_df['ds'].astype('int')
-        train_df = train_df.sort_values(['unique_id', 'ds']).reset_index(drop = True)
+            module_logger.info(f'Directory {k}...')
+            fnm_tmp = file_names[k]
+            
+            for f in fnm_tmp:
 
-        module_logger.info(f'Downloading {dataset_name} test dataset...')
-        test_df = pd.read_csv('data/m4/Daily-test.csv')
-        test_df.columns = ['unique_id'] + list(range(1, test_df.shape[1]))
-        test_df = pd.melt(test_df, id_vars = ['unique_id'], var_name = 'ds', value_name = 'y')
-        test_df = test_df.dropna()
-        test_df['ds'] = test_df['ds'].astype('int')
-        len_train = train_df.groupby('unique_id').agg({'ds': 'max'}).reset_index()
-        len_train.columns = ['unique_id', 'len_serie']
-        test_df = test_df.merge(len_train, on = ['unique_id'])
-        test_df['ds'] = test_df['ds'] + test_df['len_serie']
-        test_df.drop('len_serie', axis = 1, inplace = True)
-        test_df = test_df.sort_values(['unique_id', 'ds']).reset_index(drop = True)
-    
+                module_logger.info(f'File {f}...')
+                fext_tmp = f + file_ext
+                fpath_tmp = create_file_path([path, k, fext_tmp], end = '')
+                gh_path_tmp = fpath_tmp + '?raw=true'
+                lbl_tmp = labels[k + '/' + fext_tmp]
+
+                df_tmp = pd.read_csv(gh_path_tmp) \
+                    .rename(columns = {'timestamp': 'ds', 'value': 'y'}) \
+                    .assign(unique_id = f, is_real_anomaly = 0)
+                df_tmp = df_tmp[['unique_id', 'ds', 'y', 'is_real_anomaly']]
+                df_tmp.loc[df_tmp['ds'].isin(lbl_tmp), 'is_real_anomaly'] = 1
+
+                if save:
+                    save_data(
+                        data = df_tmp, 
+                        path_list = ['data', dataset_name], 
+                        name_list = [dataset_name, f],
+                        ext = ext
+                    )
+
+                i += 1                
+
     else:
 
         raise(f'Unknown dataset {dataset_name}')
 
-    if save:
-        save_data(
-            data = train_df, 
-            path_list = ['data', dataset_name], 
-            name_list = [dataset_name, 'train'],
-            ext = ext
-        )
-        save_data(
-            data = test_df, 
-            path_list = ['data', dataset_name], 
-            name_list = [dataset_name, 'test'],
-            ext = ext
-        ) 
+    module_logger.info(f'Done! Downloaded {i} files.')
 
-    return train_df, test_df
+    return
 
 @pf.register_dataframe_method
 def combine_train_test(train_df, test_df):
@@ -238,65 +283,6 @@ def filter_series(data, max_series_length):
     return res_df
 
 @pf.register_dataframe_method
-def get_static_features(data, dataset_name):
-
-    """Function to add static features to the data.
-
-    Args:
-        data (pd.DataFrame): Input dataframe in Nixtla's format.
-        dataset_name (string): Name of the dataset (e.g., 'm5', 'm4').
-    
-    Returns:
-        pd.DataFrame: dataframe with static features added.
-    """
-
-    module_logger.info(f'Extracting static features from {dataset_name} dataset...')
-
-    # get splitted unique ids
-    static_df = data['unique_id'] \
-        .drop_duplicates() \
-        .apply(lambda x: pd.Series(str(x).split("_"))) \
-        .reset_index(drop = True)
-    
-    if dataset_name == 'm5':
-
-        static_df['unique_id'] = static_df[0] + "_" \
-            + static_df[1] + "_" \
-            + static_df[2] + "_" \
-            + static_df[3] + "_" \
-            + static_df[4]
-        static_df['item_id'] = static_df[0] + "_" + static_df[1] + "_" + static_df[2]
-        static_df['item_id'] = static_df['item_id'].astype('category').cat.codes
-        static_df['dept_id'] = static_df[0] + "_" + static_df[1]
-        static_df['dept_id'] = static_df['dept_id'].astype('category').cat.codes
-        static_df['cat_id'] = static_df[0]
-        static_df['cat_id'] = static_df['cat_id'].astype('category').cat.codes
-        static_df['store_id'] = static_df[3] + "_" + static_df[4]
-        static_df['store_id'] = static_df['store_id'].astype('category').cat.codes
-        static_df['state_id'] = static_df[3]
-        static_df['state_id'] = static_df['state_id'].astype('category').cat.codes
-        static_df.drop(columns = [0, 1, 2, 3, 4], axis = 1, inplace = True)
-
-    elif dataset_name == 'vn1':
-        static_df['unique_id'] = static_df[0] + "_" + static_df[1] + "_" + static_df[2]
-        static_df['client'] = static_df[0].astype('category').cat.codes
-        static_df['warehouse'] = static_df[1].astype('category').cat.codes
-        static_df['product'] = static_df[2].astype('category').cat.codes
-        static_df.drop(columns = [0, 1, 2], axis = 1, inplace = True)
-
-    elif dataset_name == 'm4':
-        static_df = pd.read_csv('data/m4/M4-info.csv')[['M4id', 'category']]
-        static_df.columns = ['unique_id', 'category']
-        static_df['category'] = static_df['category'].astype('category').cat.codes
-
-    else:
-        raise(f'Unknown dataset {dataset_name}')
-
-    res_df = pd.merge(data, static_df, how = 'left', on = 'unique_id')
-
-    return res_df
-
-@pf.register_dataframe_method
 def sampling_data(data, samples = 1000):
 
     """Function to sample dataframes.
@@ -318,57 +304,12 @@ def sampling_data(data, samples = 1000):
 
     return res_df
 
-def get_xregs_data(path_list, name_list, dataset_name, frequency, ext = '.parquet'):
-
-    """Function to get external regressors (xregs) for the specified dataset.
-
-    Args:
-        path_list (list): List of directories to be joined.
-        name_list (list): List of file names for external regressors.
-        dataset_name (string): Name of the dataset (e.g., 'm5', 'm4').
-        frequency (string): The frequency of the data (e.g., 'daily', 'weekly').
-        ext (string, optional): Extension of the external regressors files. Defaults to '.parquet'.
-    
-    Returns:
-        pd.DataFrame: dataframe with external regressors.
-    """
-
-    module_logger.info(f'Extracting external regressors for {dataset_name} dataset...')
-    
-    if dataset_name == 'm5':
-
-        ext = '.csv'
-        xreg_df = load_data(
-            path_list = path_list, 
-            name_list = name_list, 
-            ext = ext
-        )
-        xreg_df['event'] = np.where(xreg_df['event_name_1'].isna(), 0, 1)
-        xreg_df['event'] = xreg_df['event'].astype(int)
-        xreg_df['date'] = pd.to_datetime(xreg_df['date'])
-        xreg_df.rename(columns = {'date': 'ds'}, inplace = True)
-        xreg_df = xreg_df[['ds', 'event']]
-        xreg_df = aggregate_data_by_frequency(xreg_df, dataset_name, frequency, drop_firstlast = False)
-        xreg_df['event'] = np.where(xreg_df['event'] == 0, 0, 1)
-
-    elif dataset_name == 'vn1':
-
-        raise ValueError(f'Xregs are not available for dataset {dataset_name}.')
-
-    else:
-        raise ValueError(f'Unknown dataset {dataset_name}.')
-
-    return xreg_df
-
-def prepare_data(dataset_name, frequency, static_features = True, xregs = True, save = True, ext = '.parquet'):
+def prepare_data(dataset_name, save = True, ext = '.parquet'):
 
     """Function to prepare saved datasets.
 
     Args:
         dataset_name (string): Name of the dataset (e.g., 'm5', 'm4').
-        frequency (string, optional): The frequency of the data (e.g., 'daily', 'weekly').
-        static_features (bool, optional): Whether to include static features. Defaults to True.
-        xregs (bool, optional): Whether to include external regressors. Defaults to True.
         save (bool, optional): Whether to save the processed dataset. Defaults to False.
         ext (string, optional): Extension of the saved files. Defaults to '.parquet'.
 
@@ -376,57 +317,23 @@ def prepare_data(dataset_name, frequency, static_features = True, xregs = True, 
         pd.DataFrame: full dataframe.
     """
 
-    train_df = load_data(
+    df = load_data(
         path_list = ['data', dataset_name], 
-        name_list = [dataset_name, 'train'], 
+        name_list = [dataset_name], 
         ext = ext
     )
-    train_df['unique_id'] = train_df['unique_id'].astype(str)
-
-    test_df = load_data(
-        path_list = ['data', dataset_name], 
-        name_list = [dataset_name, 'test'],
-        ext = ext
-    )
-    test_df['unique_id'] = test_df['unique_id'].astype(str)
-
-    if dataset_name != 'm4':
-        train_df['ds'] = pd.to_datetime(train_df['ds'])
-        test_df['ds'] = pd.to_datetime(test_df['ds'])
-    else:
-        train_df['ds'] = train_df['ds'].astype('int')
-        test_df['ds'] = test_df['ds'].astype('int')
-
-    res_df = combine_train_test(train_df, test_df)
-    del train_df, test_df
-
-    if dataset_name != 'm4':
-        res_df = aggregate_data_by_frequency(res_df, dataset_name, frequency, drop_firstlast = True)
-    else:
-        res_df = res_df[res_df['unique_id'].str.contains(get_frequency(frequency)[0])]
-        
-    if static_features:
-        res_df = get_static_features(res_df, dataset_name)
-
-    if xregs:
-        xreg_df = get_xregs_data(
-            path_list = ['data', dataset_name],  
-            name_list = [dataset_name, 'xregs'], 
-            dataset_name = dataset_name,
-            frequency = frequency, 
-            ext = ext
-        )
-        res_df = pd.merge(res_df, xreg_df, how = 'left', on = 'ds')
+    df['unique_id'] = df['unique_id'].astype(str)
+    df['ds'] = pd.to_datetime(df['ds'])
 
     if save:
         save_data(
-            data = res_df, 
+            data = df, 
             path_list = ['data', dataset_name], 
-            name_list = [dataset_name, frequency, 'prep'],
+            name_list = [dataset_name, 'prep'],
             ext = ext
         )
 
-    return res_df
+    return df
 
 def get_data(path_list, name_list, min_series_length = None, max_series_length = None, samples = None, ext = '.parquet'):
 
