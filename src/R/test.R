@@ -47,7 +47,7 @@ data |>
             approximation = 'empirical', loo = TRUE
         )
     ) |> 
-    ggplot(aes(x = ds, y = y, color = prob < 0.05)) +
+    ggplot(aes(x = ds, y = y, color = prob < 0.01)) +
     geom_jitter(height = 0, width = 0.2) +
     scale_y_log10()
 
@@ -56,7 +56,7 @@ fit_lm <- lm(y ~ as.numeric(ds), data = data)
 weird::surprisals(fit_lm, approximation = 'empirical', loo = TRUE)
 data |>
     dplyr::mutate(prob = weird::surprisals(fit_lm, approximation = 'empirical', loo = TRUE)) |> 
-    ggplot(aes(x = ds, y = y, color = prob < 0.05)) +
+    ggplot(aes(x = ds, y = y, color = prob < 0.01)) +
     geom_jitter(height = 0, width = 0.2) +
     scale_y_log10()
 
@@ -65,7 +65,7 @@ fit_gam <- mgcv::gam(y ~ as.numeric(ds), data = data)
 weird::surprisals(fit_gam, approximation = 'empirical')
 data |>
     dplyr::mutate(prob = weird::surprisals(fit_gam, approximation = 'empirical')) |> 
-    ggplot(aes(x = ds, y = y, color = prob < 0.05)) +
+    ggplot(aes(x = ds, y = y, color = prob < 0.01)) +
     geom_jitter(height = 0, width = 0.2) +
     scale_y_log10()
 
@@ -73,7 +73,7 @@ data |>
 weird::surprisals(data$y, approximation = 'empirical', loo =  TRUE)
 data |>
     dplyr::mutate(prob = weird::surprisals(data$y, approximation = 'empirical', loo =  TRUE)) |> 
-    ggplot(aes(x = ds, y = y, color = prob < 0.005)) +
+    ggplot(aes(x = ds, y = y, color = prob < 0.01)) +
     geom_jitter(height = 0, width = 0.2) +
     scale_y_log10()
 # weird::gg_hdrboxplot(
@@ -102,9 +102,54 @@ weird::stray_scores(data$y)
 weird::stray_anomalies(data$y)
 data |>
     dplyr::mutate(prob = weird::stray_scores(data$y)) |> 
-    ggplot(aes(x = ds, y = y, color = prob < 0.01)) +
+    ggplot(aes(x = ds, y = y, color = prob > 0.01)) +
     geom_jitter(height = 0, width = 0.2) +
     scale_y_log10()
 data |>
     dplyr::mutate(is_anomaly = weird::stray_anomalies(data$y)) |> 
     plot_anomalies(anomaly_column = 'is_anomaly')
+
+
+
+# Combine
+data <- data |> 
+    dplyr::mutate(
+        "zscore" = as.integer(zscore_anomalies(data$y, q = 3)),
+        "peirce" = as.integer(weird::peirce_anomalies(data$y)),
+        "chauvenet" = as.integer(weird::chauvenet_anomalies(data$y)),
+        "grubbs" = as.integer(weird::grubbs_anomalies(data$y, alpha = 0.05)),
+        "dixon" = as.integer(weird::dixon_anomalies(data$y, alpha = 0.05)),
+        "tukey" = as.integer(tukey_anomaly(data$y, extreme = TRUE)),
+        "barbato" = as.integer(barbato_anomaly(data$y, extreme = TRUE))
+    )
+str(data)
+
+methods <- c('zscore', 'peirce', 'chauvenet', 'grubbs', 'dixon', 'tukey', 'barbato')
+data |> 
+    ensemble_anomalies(
+        methods = methods, 
+        ensemble_type = 'voting',
+        threshold = 0.5,
+        weights = NULL
+    ) |> 
+    plot_anomalies(anomaly_column = 'voting')
+
+methods <- c('zscore', 'peirce', 'chauvenet')
+data |> 
+    ensemble_anomalies(
+        methods = methods, 
+        ensemble_type = 'voting',
+        threshold = 0.5,
+        weights = NULL
+    ) |> 
+    plot_anomalies(anomaly_column = 'voting')
+
+methods <- c('zscore', 'peirce', 'chauvenet')
+data |> 
+    ensemble_anomalies(
+        methods = methods, 
+        ensemble_type = 'weighted_voting',
+        threshold = 0.5,
+        weights = c(1, 0, 0)
+    ) |> 
+    plot_anomalies(anomaly_column = 'weighted_voting')
