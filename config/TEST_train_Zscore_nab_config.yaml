@@ -17,9 +17,23 @@ fitting: {
 }
 
 model_names: [
-    'Zscore'
+    'Zscore',
+    'Pierce',
+    'Chauvenet',
+    'Grubbs',
+    'Dixon',
+    'Tukey',
+    'Barbato',
+    'Hampel'
 ]
 # model_params: null
 model_params: {
     'Zscore': {'q': 3},
+    'Pierce': {null},
+    'Chauvenet': {null},
+    'Grubbs': {'alpha': 0.01},
+    'Dixon': {'alpha': 0.01, 'two_sided': True},
+    'Tukey': {'extreme': True},
+    'Barbato': {'extreme': True},
+    'Hampel': {'bandwidth': 3, 'k': 3}
 }

@@ -15,7 +15,7 @@ module_logger = logging.getLogger('fit_anomaly_models')
 
 pd.options.mode.copy_on_write = True
 
-def train_sa_model(
+def retrain_model(
     train_df, 
     test_df,
     dataset_name,
@@ -161,7 +161,7 @@ def train_sa_model(
 
     return
 
-def train_anomaly_model(config):
+def retrain_anomaly_model(config):
 
     """Function to train the anomaly models and predict with trained models.
 
@@ -219,23 +219,18 @@ def train_anomaly_model(config):
 
         for rs in retrain_scenarios:
 
-            if model_type == 'sa':
-
-                train_sa_model(
-                    train_df = train_df, 
-                    test_df = test_df,
-                    dataset_name = dataset_name,
-                    model_name = m,
-                    engine = engine_tmp,
-                    test_window = test_window,
-                    horizon = horizon,
-                    retrain_window = rs,
-                    # store_in_sample_results = store_in_sample_results,
-                    ext = ext
-                )    
-            
-            else:
-                raise ValueError('Not yet implemented.')
+            retrain_model(
+                train_df = train_df, 
+                test_df = test_df,
+                dataset_name = dataset_name,
+                model_name = m,
+                engine = engine_tmp,
+                test_window = test_window,
+                horizon = horizon,
+                retrain_window = rs,
+                # store_in_sample_results = store_in_sample_results,
+                ext = ext
+            )    
         
         module_logger.info('----------------------------- END -----------------------------')
     

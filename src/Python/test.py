@@ -4,7 +4,7 @@ from utilities import (
     configure_logging, create_logger, stop_logger
 )
 from collect_data import get_data
-from anomaly_detection import zscore
+from anomaly_models import Zscore, Pierce, Chauvenet, Dixon, Grubbs, Tukey, Barbato  
 
 
 configure_logging(
@@ -13,11 +13,17 @@ configure_logging(
 )
 logger = create_logger()
 
-
 data = get_data(['data', 'nab'], ['nab', 'prep'])
 data = data.query('unique_id == "speed_7578"')
 
-zscore(data, q = 3)
+Zscore(data, q = 3)
+Pierce(data)
+Chauvenet(data)
+Dixon(data, alpha = 0.05, two_sided = True)
+Grubbs(data, alpha = 0.05)
+Tukey(data, extreme = False)
+Barbato(data, extreme = False)
+Hampel(data, bandwidth = 3, k = 3)
 
 stop_logger(logger)
 
@@ -32,7 +38,7 @@ import os
 from utilities import (
     get_config, configure_logging, create_logger, stop_logger
 )
-from fit_anomaly_models import train_anomaly_model
+from fit_anomaly_models import retrain_anomaly_model
 
 config = get_config('config/TEST_train_Zscore_nab_config.yaml')
 configure_logging(
@@ -44,7 +50,7 @@ configure_logging(
 )
 logger = create_logger()
 
-train_anomaly_model(config = config)
+retrain_anomaly_model(config = config)
 
 stop_logger(logger)
 
