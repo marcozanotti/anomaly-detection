@@ -4,7 +4,7 @@ from utilities import (
     configure_logging, create_logger, stop_logger
 )
 from collect_data import get_data
-from anomaly_models import Zscore, Pierce, Chauvenet, Dixon, Grubbs, Tukey, Barbato  
+from anomaly_models import Zscore, Pierce, Chauvenet, Dixon, Grubbs, Tukey, Barbato, Hampel  
 
 
 configure_logging(
