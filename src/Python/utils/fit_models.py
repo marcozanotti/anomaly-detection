@@ -15,28 +15,44 @@ module_logger = logging.getLogger('fit_models')
 
 
 def split_train_test(data, test_window):
-
-    """Function to split the data into train and test dataframes.
+    """
+    Function to split the data into train and test dataframes.
 
     Args:
-        data (pd.DataFrame): data in the Nixtla's format.
-        test_window (int): length of the test window.
+        data (pd.DataFrame): data in Nixtla's format.
+        test_window (int or float): length of the test window.
+            - If int: number of observations.
+            - If float (0 < test_window < 1): proportion of observations.
 
     Returns:
-        pd.DataFrame: training and test dataframes.
+        (pd.DataFrame, pd.DataFrame): training and test dataframes.
     """
-    
-    module_logger.info('Splitting data into train and test...')
-    train_df = data \
-        .groupby('unique_id') \
-        .head(-test_window) \
-        .sort_values(by = ['unique_id', 'ds']) \
-        .reset_index(drop = True)
-    test_df = data \
-        .groupby('unique_id') \
-        .tail(test_window) \
-        .sort_values(by = ['unique_id', 'ds']) \
-        .reset_index(drop = True)
+    module_logger.info("Splitting data into train and test...")
+
+    # Ensure data is ordered
+    data = data.sort_values(["unique_id", "ds"])
+
+    train_parts, test_parts = [], []
+
+    for _, g in data.groupby("unique_id"):
+        n = len(g)
+        if isinstance(test_window, float) and 0 < test_window < 1:
+            tw = max(1, int(n * test_window))  # at least 1 obs in test
+        else:
+            tw = int(test_window)
+
+        train_g = g.iloc[:-tw] if tw > 0 else g.iloc[:]
+        test_g = g.iloc[-tw:] if tw > 0 else g.iloc[0:0]
+
+        train_parts.append(train_g)
+        test_parts.append(test_g)
+
+    train_df = pd.concat(train_parts).reset_index(drop = True)
+    test_df = pd.concat(test_parts).reset_index(drop = True)
+
+    module_logger.info(
+        f"Train size: {len(train_df)} obs, Test size: {len(test_df)} obs"
+    )
 
     return train_df, test_df
 

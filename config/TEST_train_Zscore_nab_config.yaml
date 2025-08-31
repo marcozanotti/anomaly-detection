@@ -1,0 +1,25 @@
+
+dataset: {
+    dataset_name: 'nab',
+    frequency: null,
+    min_series_length: null,
+    max_series_length: null,
+    samples: 2,
+    ext: '.parquet',
+    seed: 1992
+}
+
+fitting: {
+    horizon: 1,
+    test_window: 0.002,
+    retrain_scenarios: [1],
+    store_in_sample_results: False
+}
+
+model_names: [
+    'Zscore'
+]
+# model_params: null
+model_params: {
+    'Zscore': {'q': 3},
+}
