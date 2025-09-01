@@ -1,0 +1,43 @@
+
+dataset: {
+    'dataset_name': 'nab',
+    'frequency': null,
+    'ext': '.parquet'
+}
+
+fitting: {
+    horizon: 1,
+    test_window: 0.02,
+    retrain_scenarios: [1]
+}
+
+ensembling: {
+    model_names: [
+        [
+            'Zscore', 
+            'Pierce', 
+            'Chauvenet', 
+        ],
+        [
+            'Tukey',
+            'Barbato'
+        ]
+    ],
+    name: [
+        'Stat1', 
+        'Box1'
+    ],
+    methods: ['voting', 'wvoting'], # ['voting', 'wvoting']
+    model_weights: {
+        'Stat1': {
+            'Zscore': 3, 
+            'Pierce': 2, 
+            'Chauvenet': 1
+        },
+        'Box1': {
+            'Tukey': 2, 
+            'Barbato': 1
+        },
+    },
+    anomaly_threshold: 0.5
+}

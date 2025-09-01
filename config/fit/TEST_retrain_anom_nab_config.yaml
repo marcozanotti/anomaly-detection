@@ -26,7 +26,7 @@ model_names: [
     'Barbato',
     'Hampel'
 ]
-# model_params: null
+
 model_params: {
     'Zscore': {'q': 3},
     'Pierce': {null},

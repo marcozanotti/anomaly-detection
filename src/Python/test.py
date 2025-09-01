@@ -40,7 +40,7 @@ from utilities import (
 )
 from fit_anomaly_models import retrain_anomaly_model
 
-config = get_config('config/TEST_train_Zscore_nab_config.yaml')
+config = get_config('config/fit/TEST_retrain_anom_nab_config.yaml')
 configure_logging(
     config_file = 'config/log_config.yaml', 
     name_list = [
@@ -51,6 +51,34 @@ configure_logging(
 logger = create_logger()
 
 retrain_anomaly_model(config = config)
+
+stop_logger(logger)
+
+
+
+
+
+
+
+import sys
+sys.path.insert(0, 'src/Python/utils')
+import os
+from utilities import (
+    get_config, configure_logging, create_logger, stop_logger
+)
+from fit_anomaly_ensembles import fit_anomaly_ensembles
+
+config = get_config('config/ensemble/TEST_ensemble_nab_config.yaml')
+configure_logging(
+    config_file = 'config/log_config.yaml', 
+    name_list = [
+        config['dataset']['dataset_name'], 
+        'train', 'anomaly'
+    ]
+)
+logger = create_logger()
+
+fit_anomaly_ensembles(config = config)
 
 stop_logger(logger)
 
