@@ -1,4 +1,5 @@
 # TODO:
+- add is_real_anomaly and anomaly to sf results
 - function to perform ensemble anomalies for all methods permutations and combinations and give appropriate naming
 
 - research R packages and add methods

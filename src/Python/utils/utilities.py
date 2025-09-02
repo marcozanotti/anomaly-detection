@@ -285,9 +285,9 @@ def get_frequency(frequency):
         elif frequency == 'monthly':
             freq = ['ME', 12, 'ME']
         elif frequency == 'quarterly':
-            freq = ['Q', 4, 'QE']
+            freq = ['QE', 4, 'QE']
         elif frequency == 'yearly':
-            freq = ['Y', 1, 'YE']
+            freq = ['YE', 1, 'YE']
         else:
             raise ValueError(f'Invalid frequency: {frequency}')  
     else:
@@ -310,12 +310,7 @@ def get_dataset_frequency(dataset_name, series_name = None):
     module_logger.info(f'Getting {dataset_name} frequency...')
 
     if dataset_name == 'nab':
-        if series_name == 'ec2_cpu_utilization_24ae8d':
-            freq = 'daily'
-        elif series_name == 'rogue_agent_key_updown':
-            freq = 'daily'
-        else:
-            raise ValueError(f'Invalid series: {series_name}')
+        freq = 'yearly'
     else:
         raise ValueError(f'Invalid dataset: {dataset_name}')
 

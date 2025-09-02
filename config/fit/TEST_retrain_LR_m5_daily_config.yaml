@@ -1,10 +1,10 @@
 
 dataset: {
-    dataset_name: 'm5',
-    frequency: 'daily',
-    min_series_length: 730,
-    'max_series_length': null,
-    samples: 100,
+    dataset_name: 'nab',
+    frequency: 'yearly',
+    min_series_length: null,
+    max_series_length: null,
+    samples: 2,
     ext: '.parquet',
     seed: 1992
 }

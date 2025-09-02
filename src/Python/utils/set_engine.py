@@ -4,6 +4,8 @@ sys.path.insert(0, 'src/Python/utils')
 import os
 import pandas_flavor as pf
 from pandas.api.types import is_numeric_dtype
+from statsforecast import StatsForecast
+from statsforecast.models import AutoETS
 from mlforecast import MLForecast
 from neuralforecast import NeuralForecast
 from sklearn.linear_model import LinearRegression, Lasso, Ridge
@@ -172,7 +174,17 @@ def get_default_model_params(model_name):
 
     module_logger.info('Defining default model parameters...')
 
-    if model_name == 'LinearRegression':
+    if model_name == 'ETS':
+
+        model_params = {
+            model_name: {
+                'season_leangth': 1,
+                'model': 'ZZZ',
+                'damped': None
+            }
+        }
+    
+    elif model_name == 'LinearRegression':
 
         model_params = {
             model_name: {'n_jobs': -1}
@@ -301,7 +313,14 @@ def set_model(model_name, model_params = None):
         model_params = get_default_model_params(model_name)[model_name]
     module_logger.info(f'Model parameters: {model_params}')
 
-    if model_type == 'ml':
+    if model_type == 'sf':
+        
+        if model_name == 'ETS':
+            model = [AutoETS(**model_params, alias = model_name)]
+        else:
+            raise ValueError(f'Invalid model: {model_name}')
+
+    elif model_type == 'ml':
 
         if model_name == 'LinearRegression':
             model = [LinearRegression(**model_params)]
@@ -371,7 +390,11 @@ def set_engine(model_name, frequency, features, target_transforms = None, model_
 
     if model_type =='sf':
 
-        raise ValueError(f'Not yet implemented for model {model_name}')
+        engine = StatsForecast(
+            models = model,
+            freq = freq,
+            n_jobs = os.cpu_count()
+        )
 
     elif model_type == 'ml':
 
@@ -413,7 +436,7 @@ def add_data_features(data, frequency, features, remove_static = False):
         pd.DataFrame: dataframe with date features added.
     """
 
-    module_logger.info(f'Adding features to the dataset...')
+    module_logger.info('Adding features to the dataset...')
 
     freq = get_frequency(frequency)[0]
     lags = get_lags(feature_list = features['lags'])

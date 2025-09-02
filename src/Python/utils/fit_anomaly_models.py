@@ -86,10 +86,6 @@ def retrain_model(
             # define the training data
             train_df_ts_tmp = combine_train_test(train_df_ts, test_df_ts.groupby('unique_id').head(i + horizon))
 
-            # define the testing data
-            test_df_ts_tmp = test_df_ts.groupby('unique_id').head(i + horizon).groupby('unique_id').tail(horizon)
-            test_df_ts_tmp.reset_index(drop = True, inplace = True)
-                
             # re-train the model
             module_logger.info(f'Fitting: t = {i}, {int(i / retrain_window + 1)} of {n_fitting}...')
             start_fit_time = time.time()
@@ -121,7 +117,7 @@ def retrain_model(
             })
             time_df = pd.concat([time_df, time_df_tmp], axis = 0)
 
-            del train_df_ts_tmp, test_df_ts_tmp, fit_ts_tmp, out_sample_df_ts_tmp, time_df_tmp 
+            del train_df_ts_tmp, fit_ts_tmp, out_sample_df_ts_tmp, time_df_tmp 
             if (i % 10) == 0:
                 gc.collect() # call gc once every 10 iterations to avoid overhead
 
