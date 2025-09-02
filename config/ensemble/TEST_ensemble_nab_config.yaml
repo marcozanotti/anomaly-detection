@@ -1,7 +1,6 @@
 
 dataset: {
     'dataset_name': 'nab',
-    'frequency': null,
     'ext': '.parquet'
 }
 

@@ -185,7 +185,6 @@ def retrain_anomaly_model(config):
     test_window = config['fitting']['test_window']
     horizon = config['fitting']['horizon']
     retrain_scenarios = config['fitting']['retrain_scenarios']
-    # store_in_sample_results = config['fitting']['store_in_sample_results']
     # model parameters
     model_names = config['model_names']
     model_params = config['model_params']

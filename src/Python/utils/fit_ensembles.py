@@ -23,7 +23,6 @@ def fit_ensembles(config):
 
     # dataset parameters
     dataset_name = config['dataset']['dataset_name']
-    frequency = config['dataset']['frequency']
     ext = config['dataset']['ext']
     # fitting parameters
     test_window = config['fitting']['test_window']

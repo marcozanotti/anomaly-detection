@@ -1,7 +1,6 @@
 
 dataset: {
     dataset_name: 'nab',
-    frequency: null,
     min_series_length: null,
     max_series_length: null,
     samples: 2,
@@ -12,8 +11,7 @@ dataset: {
 fitting: {
     horizon: 1,
     test_window: 0.002,
-    retrain_scenarios: [1],
-    store_in_sample_results: False
+    retrain_scenarios: [1]
 }
 
 model_names: [

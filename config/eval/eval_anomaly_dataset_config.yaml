@@ -1,0 +1,10 @@
+
+dataset: {
+    'dataset_names': ['nab'],
+    'ext': '.parquet'
+}
+
+model_names: [
+    'Zscore', 
+    'Pierce'
+]

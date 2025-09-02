@@ -1,0 +1,19 @@
+
+dataset: {
+    'dataset_name': 'nab',
+    'ext': '.parquet'
+}
+
+fitting: {
+    'retrain_scenarios': [1],
+    combine_only: False
+}
+
+model_names: [
+    'Zscore', 
+    'Pierce'
+]
+
+evaluation: {
+    metrics: ['accuracy', 'recall', 'precision', 'f1', 'auc']
+}
