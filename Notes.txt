@@ -1,8 +1,8 @@
 # TODO:
-- function to perform ensemble anomalies for all methods permutations and combinations and give appropriate naming
+
+- pytimetk for Twitter
+- sktime for Stray
 
 - research R packages and add methods
 
-- time series prediction models 
-- machine learning prediction models
 - deep learning prediction models 

@@ -137,7 +137,7 @@ anomaly_detection <- function(
 			res_list[["anomaly_capa"]][out[out$strength > 0, "location"]] <- 1
 			# SCAPA
 			out <- anomaly::point_anomalies(anomaly::scapa.uv(data, transform = scale)) # base scale function as transform to avoid NaN problems
-			res_list[["anomaly_capa"]][out[out$strength > 0, "location"]] <- 1
+			res_list[["anomaly_scapa"]][out[out$strength > 0, "location"]] <- 1
 		}
 	} else {
 		res_list[["anomaly_capa"]] <- NULL # CAPA

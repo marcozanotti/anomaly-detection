@@ -33,5 +33,5 @@ model_params: {
     'Dixon': {'alpha': 0.01, 'two_sided': True},
     'Tukey': {'extreme': True},
     'Barbato': {'extreme': True},
-    'Hampel': {'bandwidth': 3, 'k': 3}
+    'Hampel': {'bandwidth': 7, 'k': 6}
 }
