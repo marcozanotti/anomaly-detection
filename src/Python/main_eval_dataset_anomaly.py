@@ -8,7 +8,7 @@ from utilities import (
 from evaluate_anomaly import evaluate_anomaly_dataset
 
 os.environ['NIXTLA_ID_AS_COL'] = '1'
-config = get_config('config/eval/eval_anomaly_dataset_config.yaml')
+config = get_config('config/eval/eval_dataset_anomaly_config.yaml')
 configure_logging(
     config_file = 'config/log_config.yaml', 
     name_list = [

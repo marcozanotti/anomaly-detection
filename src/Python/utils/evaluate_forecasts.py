@@ -204,27 +204,18 @@ def evaluate_forecasts(
     """
 
     module_logger.info('Evaluating point forecasts...')
-    samples = list(out_sample_df['sample'].unique())
-    # n_samples = len(samples)
-
     eval_df = pd.DataFrame()
-
-    for s in samples:
-
-        # module_logger.info(f'Samlple {s} of {n_samples}...')
-        eval_df_tmp = evaluate(
-            out_sample_df[out_sample_df['sample'] == s], 
-            metrics = metrics,
-            models = ['fcst'],
-            train_df = train_df,
-            id_col = 'unique_id',
-            level = levels   
-        ) \
-            .pivot(index = 'unique_id', columns = 'metric', values = 'fcst') \
-            .reset_index()
-        eval_df_tmp['sample'] = s
-        eval_df = pd.concat([eval_df, eval_df_tmp], axis = 0)
-
+    # module_logger.info(f'Samlple {s} of {n_samples}...')
+    eval_df = evaluate(
+        out_sample_df, 
+        metrics = metrics,
+        models = ['fcst'],
+        train_df = train_df,
+        id_col = 'unique_id',
+        level = levels   
+    ) \
+        .pivot(index = 'unique_id', columns = 'metric', values = 'fcst') \
+        .reset_index()
     eval_df['method'] = out_sample_df['method'][0]
     eval_df['test_window'] = out_sample_df['test_window'][0]
     eval_df['horizon'] = out_sample_df['horizon'][0]
@@ -244,7 +235,6 @@ def evaluate_model(config):
 
     # dataset parameters
     dataset_name = config['dataset']['dataset_name']
-    frequency = config['dataset']['frequency']
     min_series_length = config['dataset']['min_series_length']
     max_series_length = config['dataset']['max_series_length']
     samples = config['dataset']['samples']
@@ -259,14 +249,13 @@ def evaluate_model(config):
     # evaluation parameters
     eval_freq = config['evaluation']['evaluation_frequency']
     metrics = get_metrics(config['evaluation']['metrics'], eval_freq)
-    eval_sample_type = config['evaluation']['evaluation_sample_type']
 
     # load the dataset
     if samples is not None:
         np.random.seed(seed)
     train_df = get_data(
         path_list = ['data', dataset_name],
-        name_list = [dataset_name, frequency, 'prep'],
+        name_list = [dataset_name, 'prep'],
         ext = '.parquet',
         min_series_length = min_series_length, 
         max_series_length = max_series_length, 
@@ -286,34 +275,18 @@ def evaluate_model(config):
                 module_logger.info(f'Evaluate predictions for retrain scenario: {rs}')
                 eval_df_retrain = pd.DataFrame() # eval_df_retrain.shape[0] = 30.000 * 365 = 11.000.000
                 file_names_tmp = get_file_name(
-                    path_list = ['results', dataset_name, frequency, m, rs, 'outsample', 'tmp'], 
+                    path_list = ['results', dataset_name, m, rs, 'outsample', 'tmp'], 
                     name_list = None,
                     ext = ext
                 )
-                file_names_tmp.sort(key = lambda x: int("".join([i for i in x if i.isdigit()])))
                 
                 for i in range(len(file_names_tmp)):
                     eval_df_tmp = load_data(
-                        path_list = ['results', dataset_name, frequency, m, rs, 'outsample', 'tmp'],
+                        path_list = ['results', dataset_name, m, rs, 'outsample', 'tmp'],
                         name_list = [file_names_tmp[i]],
                         ext = ext
                     )
-
-                    if eval_sample_type == 'nooverlap':
-                        if i == 0: 
-                            ds_tmp = set(eval_df_tmp['ds'].unique())
-                            ds_to_keep = set([eval_df_tmp['ds'].max()]) # keep only last date to be consistent among samples
-                            ds_to_remove = ds_tmp - ds_to_keep
-                            eval_df_tmp = eval_df_tmp.loc[eval_df_tmp['ds'].isin(ds_to_keep)]
-                            ds_to_remove = ds_to_remove | ds_to_keep # update ds_to_remove
-                        else:
-                            ds_tmp = set(eval_df_tmp['ds'].unique())
-                            ds_to_keep = ds_tmp - ds_to_remove
-                            eval_df_tmp = eval_df_tmp.loc[eval_df_tmp['ds'].isin(ds_to_keep)]
-                            ds_to_remove = ds_to_remove | ds_to_keep # update ds_to_remove
-
                     eval_df_tmp.reset_index(drop = True, inplace = True)
-
                     eval_df_tmp = evaluate_forecasts(
                         out_sample_df = eval_df_tmp, 
                         metrics = metrics, 
@@ -325,35 +298,26 @@ def evaluate_model(config):
                     if (i % 10) == 0:
                         gc.collect()
 
-                # eval_df_agg_by_id.shape[0] = 30.000
-                eval_df_agg_by_id_tmp = aggregate_data(
-                    data = eval_df_retrain,
-                    group_columns = ['method', 'test_window', 'horizon', 'retrain_window', 'unique_id'],
-                    drop_columns = ['sample'],
-                    function_name = 'mean',
-                    adjust_metrics = True
-                )
-                del eval_df_retrain
                 save_data(
-                    eval_df_agg_by_id_tmp,
-                    path_list = ['results', dataset_name, frequency, m, 'evaluation', 'byretrain'],
-                    name_list = [dataset_name, frequency, m, rs, 'eval', eval_sample_type],
+                    eval_df_retrain,
+                    path_list = ['results', dataset_name, m, 'evaluation', 'byretrain'],
+                    name_list = [dataset_name, m, rs, 'eval'],
                     ext = ext
                 )
-                del eval_df_agg_by_id_tmp
+                del eval_df_retrain
 
         # combine and save evaluation results
         combine_and_save_files(
-            path_list_to_read = ['results', dataset_name, frequency, m, 'evaluation', 'byretrain'],
-            path_list_to_write = ['results', dataset_name, frequency, m, 'evaluation'],
-            name_list = [dataset_name, frequency, m, 'eval', eval_sample_type],
+            path_list_to_read = ['results', dataset_name, m, 'evaluation', 'byretrain'],
+            path_list_to_write = ['results', dataset_name, m, 'evaluation'],
+            name_list = [dataset_name, m, 'eval'],
             ext = ext
         )
         # combine and save time results
         combine_and_save_files(
-            path_list_to_read = ['results', dataset_name, frequency, m, 'time', 'byretrain'],
-            path_list_to_write = ['results', dataset_name, frequency, m, 'time'],
-            name_list = [dataset_name, frequency, m, 'time'],
+            path_list_to_read = ['results', dataset_name, m, 'time', 'byretrain'],
+            path_list_to_write = ['results', dataset_name, m, 'time'],
+            name_list = [dataset_name, m, 'time'],
             ext = ext
         )
 
@@ -375,16 +339,13 @@ def evaluate_dataset(config):
     module_logger.info('---------------------------- START ----------------------------')
 
     dataset_names = config['dataset']['dataset_names']
-    frequencies = config['dataset']['frequencies']
     ext = config['dataset']['ext']
     model_names = config['model_names']
-    eval_sample_type = config['evaluation']['evaluation_sample_type']
 
     for i in range(len(dataset_names)):
 
         dataset_name_tmp = dataset_names[i]
-        freq_tmp = frequencies[i]
-        module_logger.info(f'[ Dataset: {dataset_name_tmp} | Frequency: {freq_tmp} ]')
+        module_logger.info(f'[ Dataset: {dataset_name_tmp} ]')
 
         # get file paths and names of evaluation and time samples
         eval_f_list = []
@@ -392,19 +353,19 @@ def evaluate_dataset(config):
         for m in model_names:
             eval_f_list += [
                 create_file_path(
-                    path_list = ['results', dataset_name_tmp, freq_tmp, m, 'evaluation']
+                    path_list = ['results', dataset_name_tmp, m, 'evaluation']
                 ) + 
                 create_file_name(
-                    name_list = [dataset_name_tmp, freq_tmp, m, 'eval', eval_sample_type],
+                    name_list = [dataset_name_tmp, m, 'eval'],
                     ext = ext
                 )
             ]
             time_f_lst += [
                 create_file_path(
-                    path_list = ['results', dataset_name_tmp, freq_tmp, m, 'time']
+                    path_list = ['results', dataset_name_tmp, m, 'time']
                 ) + 
                 create_file_name(
-                    name_list = [dataset_name_tmp, freq_tmp, m, 'time'],
+                    name_list = [dataset_name_tmp, m, 'time'],
                     ext = ext
                 )
             ]        
@@ -412,16 +373,16 @@ def evaluate_dataset(config):
         # combine and save evaluation results
         combine_and_save_files(
             path_list_to_read = None,
-            path_list_to_write = ['results', dataset_name_tmp, freq_tmp, 'evaluation'],
-            name_list = [dataset_name_tmp, freq_tmp, 'eval', eval_sample_type],
+            path_list_to_write = ['results', dataset_name_tmp, 'evaluation'],
+            name_list = [dataset_name_tmp,  'eval'],
             ext = ext,  
             files_to_read = eval_f_list
         )
         # combine and save time results
         combine_and_save_files(
             path_list_to_read = None,
-            path_list_to_write = ['results', dataset_name_tmp, freq_tmp, 'evaluation'],
-            name_list = [dataset_name_tmp, freq_tmp, 'time'],
+            path_list_to_write = ['results', dataset_name_tmp, 'evaluation'],
+            name_list = [dataset_name_tmp, 'time'],
             ext = ext,
             files_to_read = time_f_lst
         )

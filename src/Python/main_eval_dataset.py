@@ -13,7 +13,6 @@ configure_logging(
     config_file = 'config/log_config.yaml', 
     name_list = [
         config['dataset']['dataset_names'], 
-        config['dataset']['frequencies'], 
         'evaluation', 'dataset'
     ]
 )
