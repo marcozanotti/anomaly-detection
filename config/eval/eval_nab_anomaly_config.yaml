@@ -6,12 +6,17 @@ dataset: {
 
 fitting: {
     'retrain_scenarios': [1],
+    levels: [95, 99],
     combine_only: False
 }
 
 model_names: [
-    'Zscore', 
-    'Pierce'
+    'ETS',
+    'ARIMA',
+    'Theta',
+    # 'CES',
+    'MFLES',
+    'TBATS'
 ]
 
 evaluation: {

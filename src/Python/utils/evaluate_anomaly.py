@@ -73,7 +73,6 @@ def aggregate_anomaly_data(
 
     return data_agg
 
-
 def get_anomaly_metrics(metric_names):
 
     """Function to get the evaluation metrics.
@@ -104,7 +103,8 @@ def get_anomaly_metrics(metric_names):
 @pf.register_dataframe_method
 def evaluate_anomaly(
     out_sample_df, 
-    metrics = [accuracy]
+    metrics = [accuracy, recall, precision, f1],
+    levels = None
 ):
 
     """Function to evaluate the anomalies.
@@ -112,6 +112,7 @@ def evaluate_anomaly(
     Args:
         out_sample_df (pd.DataFrame): dataframe with columns 'unique_id', 'ds', 'is_real_anomaly', 'anomaly'.
         metrics (list): list of evaluation metrics.
+        levels (list): list of levels of prediction intervals.
 
     Returns:
         pd.DataFrame: dataframe with evaluation results for each metric.
@@ -119,15 +120,35 @@ def evaluate_anomaly(
 
     module_logger.info('Evaluating anomalies...')
 
-    eval_df = evaluate(
-        out_sample_df, 
-        metrics = metrics,
-        models = ['anomaly'],
-        id_col = 'unique_id',
-        target_col = 'is_real_anomaly'
-    ) \
-        .pivot(index = 'unique_id', columns = 'metric', values = 'anomaly') \
-        .reset_index()
+    if levels is not None:
+        models = [f"anomaly-{lvl}" for lvl in levels]
+        eval_df = evaluate(
+            out_sample_df, 
+            metrics = metrics,
+            models = models,
+            id_col = 'unique_id',
+            target_col = 'is_real_anomaly'
+        )
+        eval_df = eval_df.melt(
+            id_vars = ['unique_id', 'metric'],
+            value_vars = models,
+            var_name = 'level',
+            value_name = 'anomaly'
+        )
+        eval_df['level'] = eval_df['level'].str.replace('anomaly-', '').astype(int)
+        eval_df = eval_df.pivot(index = ['unique_id', 'level'], columns = 'metric', values = 'anomaly')
+    else:
+        models = ['anomaly']
+        eval_df = evaluate(
+            out_sample_df, 
+            metrics = metrics,
+            models = models,
+            id_col = 'unique_id',
+            target_col = 'is_real_anomaly'
+        )
+        eval_df = eval_df.pivot(index = 'unique_id', columns = 'metric', values = 'anomaly')
+
+    eval_df.reset_index(inplace = True)
     eval_df['method'] = out_sample_df['method'][0]
     eval_df['test_window'] = out_sample_df['test_window'][0]
     eval_df['horizon'] = out_sample_df['horizon'][0]
@@ -150,6 +171,7 @@ def evaluate_anomaly_model(config):
     ext = config['dataset']['ext']
     # fitting parameters    
     retrain_scenarios = config['fitting']['retrain_scenarios']
+    levels = config['fitting']['levels']
     combine_only = config['fitting']['combine_only']
     # model parameters
     model_names = config['model_names']
@@ -183,7 +205,8 @@ def evaluate_anomaly_model(config):
                     eval_df_tmp.reset_index(drop = True, inplace = True)
                     eval_df_tmp = evaluate_anomaly(
                         out_sample_df = eval_df_tmp, 
-                        metrics = metrics
+                        metrics = metrics,
+                        levels = levels
                     )
                     eval_df_retrain = pd.concat([eval_df_retrain, eval_df_tmp], axis = 0)
                     del eval_df_tmp

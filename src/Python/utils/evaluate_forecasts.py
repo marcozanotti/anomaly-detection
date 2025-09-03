@@ -197,6 +197,7 @@ def evaluate_forecasts(
         metrics (list): list of evaluation metrics.
         train_df (pd.DataFrame, optional): training data in the Nixtla's format. 
         Defaults to None.
+        levels (list): list of levels of prediction intervals.
 
     Returns:
         pd.DataFrame: dataframe with evaluation results for each metric.

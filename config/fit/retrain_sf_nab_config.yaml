@@ -11,7 +11,7 @@ dataset: {
 
 fitting: {
     horizon: 1,
-    test_window: 0.002,
+    test_window: 0.001,
     retrain_scenarios: [1],
     'intervals': {
         'h': 1,
@@ -23,11 +23,21 @@ fitting: {
 }
 
 model_names: [
-    'ETS'
+    'ETS',
+    'ARIMA',
+    'Theta',
+    # 'CES',
+    'MFLES',
+    'TBATS'
 ]
 
 model_params: {
     'ETS': {'season_length': 1, 'model': 'ZZZ'},
+    'ARIMA': {'season_length': 1},
+    'Theta': {'season_length': 1},
+    'CES': {'season_length': 1},
+    'MFLES': {'season_length': null, 'test_size': 10, 'metric': 'mse'},
+    'TBATS': {'season_length': [1]},
 }
 
 target_transforms: null

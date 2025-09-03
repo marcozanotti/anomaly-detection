@@ -1,45 +1,14 @@
 
 dataset: {
-    'dataset_names': [
-        # 'm5', 
-        # 'm5', 
-        # 'm5',
-        # 'vn1', 
-        # 'vn1',
-        'm4'
-    ],
-    'frequencies': [
-        # 'monthly', 
-        # 'weekly',
-        # 'daily', 
-        # 'monthly', 
-        # 'weekly',
-        'daily'
-    ],
+    'dataset_names': ['nab'],
     'ext': '.parquet'
 }
 
 model_names: [
-    'LinearRegression', 
-    'RandomForestRegressor', 
-    'XGBRegressor', 
-    'LGBMRegressor', 
-    # 'CatBoostRegressor',
-    'MLP',
-    # 'LSTM',
-    'TCN',
-    'NBEATSx',
-    'NHITS',
-    'EnsembleMean2A',
-    # 'EnsembleMean2T',
-    'EnsembleMean3A',
-    # 'EnsembleMean3T',
-    'EnsembleMean4A',
-    # 'EnsembleMean4T',
-    'EnsembleMean5A',
-    # 'EnsembleMean5T'
+    'ETS',
+    'ARIMA',
+    'Theta',
+    # 'CES',
+    'MFLES',
+    'TBATS'
 ]
-
-evaluation: {
-    evaluation_sample_type: 'overlap' # nooverlap
-}

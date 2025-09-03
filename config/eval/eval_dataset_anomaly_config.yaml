@@ -5,6 +5,10 @@ dataset: {
 }
 
 model_names: [
-    'Zscore', 
-    'Pierce'
+    'ETS',
+    'ARIMA',
+    'Theta',
+    # 'CES',
+    'MFLES',
+    'TBATS'
 ]

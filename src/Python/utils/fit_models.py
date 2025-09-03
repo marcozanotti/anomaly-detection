@@ -218,8 +218,8 @@ def retrain_sf_model(
     for ts in series:
 
         module_logger.info(f'[ Series: {ts} ]')
-        train_df_ts = train_df.query(f'unique_id == "{ts}"') 
-        test_df_ts = test_df.query(f'unique_id == "{ts}"')
+        train_df_ts = train_df.query(f'unique_id == "{ts}"')[['unique_id', 'ds', 'y']] 
+        test_df_ts = test_df.query(f'unique_id == "{ts}"')[['unique_id', 'ds', 'y']]
 
         if isinstance(test_window, float):
             test_window_ts = len(test_df_ts)
@@ -242,23 +242,35 @@ def retrain_sf_model(
             if i in fitting_ids:
 
                 # re-train the model
-                module_logger.info(f'Fitting: t = {i}, {int(i / retrain_window + 1)} of {n_fitting}...')
-                start_fit_time = time.time()
+                # module_logger.info(f'Fitting: t = {i}, {int(i / retrain_window + 1)} of {n_fitting}...')
+                # start_fit_time = time.time()
 
-                if intervals is None:
-                    fit_ts_tmp = engine.fit(df = train_df_ts_tmp)
-                else:
-                    fit_ts_tmp = engine.fit(df = train_df_ts_tmp, prediction_intervals = intervals)
+                # if intervals is None:
+                #     fit_ts_tmp = engine.fit(df = train_df_ts_tmp)
+                # else:
+                #     fit_ts_tmp = engine.fit(df = train_df_ts_tmp, prediction_intervals = intervals)
 
-                end_fit_time = time.time()
+                # end_fit_time = time.time()
 
-                # predict out-of-sample with the models
-                module_logger.info('Predicting...')
-                start_predict_time = time.time()
+                # # predict out-of-sample with the models
+                # module_logger.info('Predicting...')
+                # start_predict_time = time.time()
+                # h = horizon + (retrain_window - horizon)
+                # out_sample_df_ts_tmp = fit_ts_tmp.predict(h = h, level = levels)
+                # end_predict_time = time.time()
+
+                # tot_sample_time = end_predict_time - start_fit_time
+                module_logger.info(f'Fitting and predicting: t = {i}, {int(i / retrain_window + 1)} of {n_fitting}...')
+                fit_ts_tmp = None
+                start_fit_time = start_predict_time = time.time()
                 h = horizon + (retrain_window - horizon)
-                out_sample_df_ts_tmp = fit_ts_tmp.predict(h = h, level = levels)
-                end_predict_time = time.time()
-
+                if intervals is None:
+                    out_sample_df_ts_tmp = engine.forecast(df = train_df_ts_tmp, h = h)
+                else:
+                    out_sample_df_ts_tmp = engine.forecast(
+                        df = train_df_ts_tmp, h = h, prediction_intervals = intervals, level = levels
+                    )
+                end_fit_time = end_predict_time = time.time()
                 tot_sample_time = end_predict_time - start_fit_time
 
             # add additional columns to the dataframes for tracking parameters

@@ -1,0 +1,30 @@
+
+dataset: {
+    dataset_name: 'nab',
+    frequency: 'yearly',
+    min_series_length: null,
+    max_series_length: null,
+    samples: 2,
+    ext: '.parquet',
+    seed: 1992
+}
+
+fitting: {
+    'retrain_scenarios': [1],
+    levels: [95, 99],
+    combine_only: False
+}
+
+model_names: [
+    'ETS',
+    'ARIMA',
+    'Theta',
+    # 'CES',
+    'MFLES',
+    'TBATS'
+]
+
+evaluation: {
+    metrics: ['bias', 'mae', 'mse', 'rmse', 'mase', 'msse', 'rmsse'], #  'mql', 'smql', 'scrps'
+    evaluation_frequency: 'yearly', # frequency for mase, msse, rmsse
+}

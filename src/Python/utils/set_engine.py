@@ -5,7 +5,7 @@ import os
 import pandas_flavor as pf
 from pandas.api.types import is_numeric_dtype
 from statsforecast import StatsForecast
-from statsforecast.models import AutoETS
+from statsforecast.models import AutoETS, AutoARIMA, AutoTheta, AutoCES, AutoMFLES, AutoTBATS
 from mlforecast import MLForecast
 from neuralforecast import NeuralForecast
 from sklearn.linear_model import LinearRegression, Lasso, Ridge
@@ -143,7 +143,7 @@ def get_model_type(model_name):
         str: model type.
     """
     
-    sf = ['ETS', 'ARIMA']
+    sf = ['ETS', 'ARIMA', 'Theta', 'CES', 'MFLES', 'TBATS']
     ml = [
         'LinearRegression', 'Lasso', 'Ridge', 
         'RandomForestRegressor', 
@@ -179,8 +179,49 @@ def get_default_model_params(model_name):
         model_params = {
             model_name: {
                 'season_leangth': 1,
-                'model': 'ZZZ',
-                'damped': None
+                'model': 'ZZZ'
+            }
+        }
+    
+    elif model_name == 'ARIMA':
+
+        model_params = {
+            model_name: {
+                'season_leangth': 1
+            }
+        }
+    
+    elif model_name == 'Theta':
+
+        model_params = {
+            model_name: {
+                'season_leangth': 1
+            }
+        }
+    
+    elif model_name == 'CES':
+
+        model_params = {
+            model_name: {
+                'season_leangth': 1
+            }
+        }
+
+    elif model_name == 'MFLES':
+
+        model_params = {
+            model_name: {
+                'season_leangth': None,
+                'test_size': 12, 
+                'metric': 'mse'
+            }
+        }
+    
+    elif model_name == 'TBATS':
+
+        model_params = {
+            model_name: {
+                'season_leangth': None
             }
         }
     
@@ -317,6 +358,16 @@ def set_model(model_name, model_params = None):
         
         if model_name == 'ETS':
             model = [AutoETS(**model_params, alias = model_name)]
+        elif model_name == 'ARIMA':
+            model = [AutoARIMA(**model_params, alias = model_name)]
+        elif model_name == 'Theta':
+            model = [AutoTheta(**model_params, alias = model_name)]
+        elif model_name == 'CES':
+            model = [AutoCES(**model_params, alias = model_name)]
+        elif model_name == 'MFLES':
+            model = [AutoMFLES(**model_params, alias = model_name)]
+        elif model_name == 'TBATS':
+            model = [AutoTBATS(**model_params, alias = model_name)]
         else:
             raise ValueError(f'Invalid model: {model_name}')
 
