@@ -18,7 +18,7 @@ fitting: {
         'n_windows': 20,
         'method': 'conformal_distribution'
     },
-    levels: [99],
+    levels: [95, 99],
     store_in_sample_results: False
 }
 
@@ -27,7 +27,7 @@ model_names: [
 ]
 
 model_params: {
-    'ETS': {'model': 'ZZZ'},
+    'ETS': {'season_length': 1, 'model': 'ZZZ'},
 }
 
 target_transforms: null

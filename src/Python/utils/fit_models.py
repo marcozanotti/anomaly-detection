@@ -99,6 +99,7 @@ def get_model_name(engine):
     return model_name
 
 def get_prediction_intervals(intervals):
+
     """Function to get prediction intervals.
 
     Args:
@@ -118,6 +119,43 @@ def get_prediction_intervals(intervals):
         )
 
     return intervals_new
+
+def add_anomaly(
+    out_sample_df: pd.DataFrame,
+    model: str = 'fcst',
+    target_col: str = 'y',
+    levels: list[int] = [95, 99],
+) -> pd.DataFrame:
+
+    """
+    Add anomaly flags for multiple confidence intervals.
+    For each CI in `cis`, creates a column `anomaly_{ci}`
+    with value 1 if target_col is outside [low_ci, high_ci], else 0.
+
+    Args:
+        out_sample_df (pd.DataFrame): dataframe with columns 'unique_id', 'ds', 'y', 'fcst', and prediction intervals.
+        model (str): Name of the forecasting model. Default to 'fcst'.
+        target_col (str): Actual values. Default to 'y'.
+        levels (list): confidence levels for the predictions. Defaults to [95, 99].
+    
+    Returns:
+        pd.DataFrame: dataframe with added anomaly column.
+    """
+
+    module_logger.info('Adding anomaly to prediction model...')
+    df = out_sample_df.copy()
+
+    for lvl in levels:
+        lo_col = f'{model}-lo-{lvl}'
+        hi_col = f'{model}-hi-{lvl}'
+        anomaly_col = f'anomaly-{lvl}'
+
+        if lo_col in df.columns and hi_col in df.columns:
+            df[anomaly_col] = ((df[target_col] < df[lo_col]) | (df[target_col] > df[hi_col])).astype(int)
+        else:
+            raise ValueError(f'Missing columns {lo_col} and/or {hi_col} in dataframe')
+
+    return df
 
 def retrain_sf_model(
     train_df, 
@@ -248,15 +286,17 @@ def retrain_sf_model(
     out_sample_df['test_window'] = test_window
     out_sample_df['horizon'] = horizon
     out_sample_df['retrain_window'] = retrain_window
+    out_sample_df.reset_index(drop = True, inplace = True)
+    out_sample_df['ds'] = test_df['ds']
     # add actual out-of-sample to results
     out_sample_df = out_sample_df.merge(
-        test_df[['unique_id', 'ds', 'y']], 
+        test_df, 
         how = 'left', 
         on = ['unique_id', 'ds'], 
         copy = False
     )
     out_sample_df.columns = out_sample_df.columns.str.replace(model_name, 'fcst')
-    out_sample_df.reset_index(drop = True, inplace = True)
+    out_sample_df = add_anomaly(out_sample_df, levels = levels)
     # save to file
     save_data(
         data = out_sample_df, 
