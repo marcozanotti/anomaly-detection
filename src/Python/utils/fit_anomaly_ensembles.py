@@ -13,7 +13,7 @@ module_logger = logging.getLogger('fit_anomaly_ensembles')
 
 
 @pf.register_dataframe_method
-def anomaly_select(anomaly_df, threshold = 0.5):
+def anomaly_select(anomaly_df, score_column = 'score', threshold = 0.5):
 
     """
     Select anomalies based on anomaly score.
@@ -29,7 +29,7 @@ def anomaly_select(anomaly_df, threshold = 0.5):
     logging.info('Selecting anomalies based on anomaly score...')
     logging.info(f'Threshold = {threshold}')
     score_df = anomaly_df.copy()
-    score_df['anomaly'] = (anomaly_df['score'] >= threshold).astype(int)
+    score_df['anomalyscore'] = (anomaly_df[score_column] >= threshold).astype(int)
 
     return score_df
 

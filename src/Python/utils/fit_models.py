@@ -1,4 +1,3 @@
-
 import sys
 sys.path.insert(0, 'src/Python/utils')
 import gc
@@ -122,9 +121,11 @@ def get_prediction_intervals(intervals):
 
 def add_anomaly(
     out_sample_df: pd.DataFrame,
+    type: str = 'intervals',
     model: str = 'fcst',
     target_col: str = 'y',
     levels: list[int] = [95, 99],
+    threshold = 0.5
 ) -> pd.DataFrame:
 
     """
@@ -134,9 +135,11 @@ def add_anomaly(
 
     Args:
         out_sample_df (pd.DataFrame): dataframe with columns 'unique_id', 'ds', 'y', 'fcst', and prediction intervals.
+        type (str): How anomaly should be calculated, based on prediction 'intervals' or on anomaly 'score'.
         model (str): Name of the forecasting model. Default to 'fcst'.
         target_col (str): Actual values. Default to 'y'.
         levels (list): confidence levels for the predictions. Defaults to [95, 99].
+        threshold: The value for the threshold used to compute anomaly when type = 'score'. Default to 0.5.
     
     Returns:
         pd.DataFrame: dataframe with added anomaly column.
@@ -145,15 +148,32 @@ def add_anomaly(
     module_logger.info('Adding anomaly to prediction model...')
     df = out_sample_df.copy()
 
-    for lvl in levels:
-        lo_col = f'{model}-lo-{lvl}'
-        hi_col = f'{model}-hi-{lvl}'
-        anomaly_col = f'anomaly-{lvl}'
+    if type == 'intervals':
 
-        if lo_col in df.columns and hi_col in df.columns:
-            df[anomaly_col] = ((df[target_col] < df[lo_col]) | (df[target_col] > df[hi_col])).astype(int)
-        else:
-            raise ValueError(f'Missing columns {lo_col} and/or {hi_col} in dataframe')
+        for lvl in levels:
+            lo_col = f'{model}-lo-{lvl}'
+            hi_col = f'{model}-hi-{lvl}'
+            anomaly_col = f'anomaly-intervals-{lvl}'
+
+            if lo_col in df.columns and hi_col in df.columns:
+                df[anomaly_col] = ((df[target_col] < df[lo_col]) | (df[target_col] > df[hi_col])).astype(int)
+            else:
+                raise ValueError(f'Missing columns {lo_col} and/or {hi_col} in dataframe')
+
+    elif type == 'score':
+
+        for lvl in levels:
+            score_col = f'score-{lvl}'
+            anomaly_col = f'anomaly-score-{lvl}'
+
+            if score_col in df.columns:
+                df[anomaly_col] = (df[score_col] >= threshold).astype(int)
+            else:
+                raise ValueError(f'Missing columns {score_col}.')
+
+    else:
+
+        raise ValueError(f'Invalid type {type}.')
 
     return df
 
@@ -220,58 +240,52 @@ def retrain_sf_model(
         module_logger.info(f'[ Series: {ts} ]')
         train_df_ts = train_df.query(f'unique_id == "{ts}"')[['unique_id', 'ds', 'y']] 
         test_df_ts = test_df.query(f'unique_id == "{ts}"')[['unique_id', 'ds', 'y']]
+        module_logger.info(f"Train size: {len(train_df_ts)} obs, Test size: {len(test_df_ts)} obs")
 
         if isinstance(test_window, float):
             test_window_ts = len(test_df_ts)
         else:
             test_window_ts = test_window
         fitting_ids = get_retrain_ids(test_window_ts, horizon, retrain_window)
-        n_fitting = len(fitting_ids) # int(np.round(test_window / retrain_window, 0))
-        n_samples = test_window_ts - horizon + 1
-        module_logger.info(
-            f'[ Retrain ids: {fitting_ids} ] | Num fitting: {n_fitting} | Num iterations: {n_samples} ]'
-        )
+        n_fitting = len(fitting_ids)
+        module_logger.info(f'[ Retrain ids: {fitting_ids} ] | Num fitting: {n_fitting} | Num iterations: {n_fitting} ]')
 
-        for i in range(n_samples):
+        for i in range(n_fitting):
             
-            module_logger.info(f'Step {i + 1} of {n_samples}')
+            module_logger.info(f'Step {i + 1} of {n_fitting}')
 
             # define the training data
-            train_df_ts_tmp = combine_train_test(train_df_ts, test_df_ts.groupby('unique_id').head(i))
+            train_df_ts_tmp = combine_train_test(train_df_ts, test_df_ts.groupby('unique_id').head(i * horizon))
 
-            if i in fitting_ids:
+            # re-train the model
+            # module_logger.info(f'Fitting: t = {i}, {int(i + 1)} of {n_fitting}...')
+            # start_fit_time = time.time()
 
-                # re-train the model
-                # module_logger.info(f'Fitting: t = {i}, {int(i / retrain_window + 1)} of {n_fitting}...')
-                # start_fit_time = time.time()
+            # if intervals is None:
+            #     fit_ts_tmp = engine.fit(df = train_df_ts_tmp)
+            # else:
+            #     fit_ts_tmp = engine.fit(df = train_df_ts_tmp, prediction_intervals = intervals)
 
-                # if intervals is None:
-                #     fit_ts_tmp = engine.fit(df = train_df_ts_tmp)
-                # else:
-                #     fit_ts_tmp = engine.fit(df = train_df_ts_tmp, prediction_intervals = intervals)
+            # end_fit_time = time.time()
 
-                # end_fit_time = time.time()
+            # # predict out-of-sample with the models
+            # module_logger.info('Predicting...')
+            # start_predict_time = time.time()
+            # out_sample_df_ts_tmp = fit_ts_tmp.predict(h = horizon, level = levels)
+            # end_predict_time = time.time()
 
-                # # predict out-of-sample with the models
-                # module_logger.info('Predicting...')
-                # start_predict_time = time.time()
-                # h = horizon + (retrain_window - horizon)
-                # out_sample_df_ts_tmp = fit_ts_tmp.predict(h = h, level = levels)
-                # end_predict_time = time.time()
-
-                # tot_sample_time = end_predict_time - start_fit_time
-                module_logger.info(f'Fitting and predicting: t = {i}, {int(i / retrain_window + 1)} of {n_fitting}...')
-                fit_ts_tmp = None
-                start_fit_time = start_predict_time = time.time()
-                h = horizon + (retrain_window - horizon)
-                if intervals is None:
-                    out_sample_df_ts_tmp = engine.forecast(df = train_df_ts_tmp, h = h)
-                else:
-                    out_sample_df_ts_tmp = engine.forecast(
-                        df = train_df_ts_tmp, h = h, prediction_intervals = intervals, level = levels
-                    )
-                end_fit_time = end_predict_time = time.time()
-                tot_sample_time = end_predict_time - start_fit_time
+            # tot_sample_time = end_predict_time - start_fit_time
+            module_logger.info(f'Fitting and predicting: t = {i}, {int(i + 1)} of {n_fitting}...')
+            fit_ts_tmp = None
+            start_fit_time = start_predict_time = time.time()
+            if intervals is None:
+                out_sample_df_ts_tmp = engine.forecast(df = train_df_ts_tmp, h = horizon)
+            else:
+                out_sample_df_ts_tmp = engine.forecast(
+                    df = train_df_ts_tmp, h = horizon, prediction_intervals = intervals, level = levels
+                )
+            end_fit_time = end_predict_time = time.time()
+            tot_sample_time = end_predict_time - start_fit_time
 
             # add additional columns to the dataframes for tracking parameters
             out_sample_df_ts_tmp['sample'] = i
@@ -291,7 +305,7 @@ def retrain_sf_model(
             if (i % 10) == 0:
                 gc.collect() # call gc once every 10 iterations to avoid overhead
 
-        del train_df_ts, test_df_ts, test_window_ts, fitting_ids, n_fitting, n_samples 
+        del train_df_ts, test_df_ts, test_window_ts, fitting_ids, n_fitting 
 
     # add additional columns to the dataframes for tracking parameters
     out_sample_df['method'] = model_name
@@ -308,7 +322,7 @@ def retrain_sf_model(
         copy = False
     )
     out_sample_df.columns = out_sample_df.columns.str.replace(model_name, 'fcst')
-    out_sample_df = add_anomaly(out_sample_df, levels = levels)
+    out_sample_df = add_anomaly(out_sample_df, type = 'intervals', levels = levels)
     # save to file
     save_data(
         data = out_sample_df, 

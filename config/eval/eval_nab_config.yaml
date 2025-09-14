@@ -25,6 +25,6 @@ model_names: [
 ]
 
 evaluation: {
-    metrics: ['bias', 'mae', 'mse', 'rmse', 'mase', 'msse', 'rmsse'], #  'mql', 'smql', 'scrps'
+    metrics: ['bias', 'mae', 'mse', 'rmse', 'mase', 'msse', 'rmsse', 'mql', 'smql'], #  'mql', 'smql', 'scrps'
     evaluation_frequency: 'yearly', # frequency for mase, msse, rmsse
 }

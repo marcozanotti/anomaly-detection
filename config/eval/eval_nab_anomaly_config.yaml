@@ -16,7 +16,15 @@ model_names: [
     'Theta',
     # 'CES',
     'MFLES',
-    'TBATS'
+    'TBATS', 
+    'EnsembleMean1',
+    'EnsembleMean2',
+    'EnsembleMean3',
+    'EnsembleMean4',
+    'EnsembleMean5',
+    'EnsembleMean6',
+    'EnsembleMean7',
+    'EnsembleMean8'
 ]
 
 evaluation: {

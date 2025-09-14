@@ -1,24 +1,23 @@
-
 dataset: {
     dataset_name: 'nab',
     frequency: 'yearly',
     min_series_length: null,
     max_series_length: null,
-    samples: 2,
+    samples: null,
     ext: '.parquet',
     seed: 1992
 }
 
 fitting: {
-    horizon: 1,
-    test_window: 0.001,
-    retrain_scenarios: [1],
+    horizon: 96,
+    test_window: 0.7,
+    retrain_scenarios: [96],
     'intervals': {
-        'h': 1,
-        'n_windows': 20,
+        'h': 96,
+        'n_windows': 5,
         'method': 'conformal_distribution'
     },
-    levels: [95, 99],
+    levels: [99, 99.5],
     store_in_sample_results: False
 }
 
@@ -28,7 +27,8 @@ model_names: [
     'Theta',
     # 'CES',
     'MFLES',
-    'TBATS'
+    'TBATS',
+    'MSTL'
 ]
 
 model_params: {
@@ -36,8 +36,9 @@ model_params: {
     'ARIMA': {'season_length': 1},
     'Theta': {'season_length': 1},
     'CES': {'season_length': 1},
-    'MFLES': {'season_length': null, 'test_size': 10, 'metric': 'mse'},
+    'MFLES': {'season_length': null, 'test_size': 50, 'metric': 'mse'},
     'TBATS': {'season_length': [1]},
+    'MSTL': {'season_length': [1]}
 }
 
 target_transforms: null

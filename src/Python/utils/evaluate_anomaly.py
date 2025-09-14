@@ -121,7 +121,11 @@ def evaluate_anomaly(
     module_logger.info('Evaluating anomalies...')
 
     if levels is not None:
-        models = [f"anomaly-{lvl}" for lvl in levels]
+
+        interval_cols = [c for c in out_sample_df.columns if '-intervals-' in c]
+        score_cols = [c for c in out_sample_df.columns if '-score-' in c]
+        models = interval_cols
+
         eval_df = evaluate(
             out_sample_df, 
             metrics = metrics,
@@ -129,15 +133,31 @@ def evaluate_anomaly(
             id_col = 'unique_id',
             target_col = 'is_real_anomaly'
         )
+
+        if score_cols:
+            eval_score_df = evaluate(
+                out_sample_df, 
+                metrics = metrics,
+                models = score_cols,
+                id_col = 'unique_id',
+                target_col = 'is_real_anomaly'
+            )
+            eval_df = eval_df.merge(eval_score_df, how = 'left', on = ['unique_id', 'metric'])
+            models = interval_cols + score_cols
+
         eval_df = eval_df.melt(
             id_vars = ['unique_id', 'metric'],
             value_vars = models,
-            var_name = 'level',
+            var_name = 'type',
             value_name = 'anomaly'
         )
-        eval_df['level'] = eval_df['level'].str.replace('anomaly-', '').astype(int)
-        eval_df = eval_df.pivot(index = ['unique_id', 'level'], columns = 'metric', values = 'anomaly')
+        eval_df['type'] = eval_df['type'].str.replace('anomaly-', '')
+        eval_df['level'] = eval_df['type'].str.replace(r'\w+-', '', regex = True).astype(int)
+        eval_df['type'] = eval_df['type'].str.replace(r'-\d+', '', regex = True)
+        eval_df = eval_df.pivot(index = ['unique_id', 'type', 'level'], columns = 'metric', values = 'anomaly')
+
     else:
+
         models = ['anomaly']
         eval_df = evaluate(
             out_sample_df, 
@@ -146,7 +166,8 @@ def evaluate_anomaly(
             id_col = 'unique_id',
             target_col = 'is_real_anomaly'
         )
-        eval_df = eval_df.pivot(index = 'unique_id', columns = 'metric', values = 'anomaly')
+        eval_df['type'] = 'score'
+        eval_df = eval_df.pivot(index = ['unique_id', 'type'], columns = 'metric', values = 'anomaly')
 
     eval_df.reset_index(inplace = True)
     eval_df['method'] = out_sample_df['method'][0]
