@@ -1,0 +1,69 @@
+analysis: {
+    'name': 'sis2026',
+    'types': ['anomaly', 'evaluation', 'time']
+}
+
+dataset: {
+    'dataset_names': ['nab'],
+    'frequencies': ['yearly'],
+    'ext': '.parquet'
+}
+
+models: {
+    'types': [
+        ['SF'], 
+        ['ENS']
+    ], 
+    'model_names': [
+        'ETS', 
+        'ARIMA', 
+        'Theta',
+        'TBATS', 
+        'MSTL',
+        'EnsembleMean1',
+        'EnsembleMean2',
+        'EnsembleMean3',
+        'EnsembleMean4',
+        'EnsembleMean5',
+        'EnsembleMean6',
+        'EnsembleMean7',
+        'EnsembleMean8',
+        'EnsembleMean9',
+        'EnsembleMean10',
+        'EnsembleMean11',
+        'EnsembleMean12'
+    ],
+    'model_names_abbr': [
+        'ETS', 
+        'ARIMA', 
+        'Theta', 
+        'TBATS', 
+        'MSTL',
+        'Ens1',
+        'Ens2',
+        'Ens3',
+        'Ens4',
+        'Ens5',
+        'Ens6',
+        'Ens7',
+        'Ens8',
+        'Ens9',
+        'Ens10',
+        'Ens11',
+        'Ens12'
+    ]
+}
+
+anomaly_params: {
+    'metrics': ['accuracy', 'precision', 'recall', 'f1', 'auc']
+}
+
+evaluation_params: {
+    'metrics': ['rmsse', 'scaled_mqloss'],
+    'outlier_cleaning_metrics': ['rmsse', 'scaled_mqloss'],
+    'outlier_cleaning_quantiles': [0.00, 0.96]
+}
+
+time_params: {
+    'metrics': ['total_sample_time']
+}

@@ -1,0 +1,86 @@
+analysis: {
+    'name': 'global_ensemble',
+    'types': ['evaluation', 'time', 'cost'],
+    'method': 'absolute', # absolute / relative # run twice, one for absolute and  one for relative
+    'sample_type': 'overlap' # overlap / nooverlap
+}
+
+dataset: {
+    'dataset_names': ['m5', 'vn1'],
+    'frequencies': ['daily', 'weekly'],
+    'ext': '.parquet'
+}
+
+models: {
+    'types': [
+        ['ML', 'DL'], 
+        ['ENSACC', 'ENSTIME']
+    ], # ML and DL together, ENS alone
+    'model_names': [
+        'LinearRegression', 
+        'RandomForestRegressor', 
+        'XGBRegressor',
+        'LGBMRegressor', 
+        'CatBoostRegressor',
+        'MLP',
+        'LSTM',
+        'TCN',
+        'NBEATSx',
+        'NHITS',
+        'EnsembleMean2A',
+        'EnsembleMean3A',
+        'EnsembleMean4A',
+        'EnsembleMean5A',
+        'EnsembleMean2T',
+        'EnsembleMean3T',
+        'EnsembleMean4T',
+        'EnsembleMean5T'
+    ],
+    'model_names_abbr': [
+        'LR', 
+        'RF', 
+        'XGBoost', 
+        'LGBM', 
+        'CatBoost',
+        'MLP',
+        'LSTM',
+        'TCN',
+        'NBEATSx',
+        'NHITS',
+        'Ens2A',
+        'Ens3A',
+        'Ens4A',
+        'Ens5A',
+        'Ens2T',
+        'Ens3T',
+        'Ens4T',
+        'Ens5T'
+    ]
+}
+
+evaluation_params: {
+    'metrics': ['rmsse', 'scaled_mqloss'],
+    'outlier_cleaning_metrics': ['rmsse', 'scaled_mqloss'],
+    'outlier_cleaning_quantiles': [0.000, 0.995]
+}
+
+time_params: {
+    'metrics': ['total_sample_time']
+}
+
+stability_params: {
+    'metrics': [],
+    'outlier_cleaning_metrics': [],
+    'outlier_cleaning_quantiles': []
+}
+
+cost_params: {
+    'metrics': ['cost', 'savings', 'savings_perc'],
+    'time_var': 'total_sample_time',
+    'n_skus': 1000000000, # 200000 skus * 5000 stores,
+    'cost_datasets_n_skus': [
+        'm5_daily': 28298,
+        'vn1_weekly': 15053
+    ],
+    'cost_per_hour': 3.5,
+}
