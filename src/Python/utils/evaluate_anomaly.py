@@ -152,8 +152,8 @@ def evaluate_anomaly(
             value_name = 'anomaly'
         )
         eval_df['type'] = eval_df['type'].str.replace('anomaly-', '')
-        eval_df['level'] = eval_df['type'].str.replace(r'\w+-', '', regex = True).astype(int)
-        eval_df['type'] = eval_df['type'].str.replace(r'-\d+', '', regex = True)
+        eval_df['level'] = eval_df['type'].str.replace(r'\w+-', '', regex = True).astype(float)
+        eval_df['type'] = eval_df['type'].str.replace(r'-\d+\.?\d+?', '', regex = True)
         eval_df = eval_df.pivot(index = ['unique_id', 'type', 'level'], columns = 'metric', values = 'anomaly')
 
     else:

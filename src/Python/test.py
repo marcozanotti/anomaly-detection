@@ -96,8 +96,6 @@ from collect_data import get_data
 
 
 data = get_data(['data', 'nab'], ['nab', 'prep'])
-data = data.query('unique_id == "speed_7578"')
-
 
 # 1. number of unique_id
 n_unique_id = data['unique_id'].nunique()
