@@ -40,7 +40,7 @@ dataset_name <- 'nab'
 # * Anomaly ---------------------------------------------------------------
 # =========================================================================
 anom_res <- res[[dataset_name]][['anomaly']][['results']]
-anom_metrics <- c('accuracy', 'precision', 'recall', 'f1', 'auc')
+anom_metrics <- c('accuracy', 'f1')
 
 # ** Tables ---------------------------------------------------------------
 print(anom_res$tables, include.rownames = FALSE)
@@ -59,6 +59,22 @@ for (am in anom_metrics) {
 		)
 	print(g)
 }
+
+g1 <- anom_res$tests |> 
+	plot_test_anomaly_results(
+		.metric = 'accuracy', 
+		facet = TRUE,
+		metric_label = toupper('accuracy'),
+		title = toupper('accuracy')
+	)
+g2 <- anom_res$tests |> 
+	plot_test_anomaly_results(
+		.metric = 'f1', 
+		facet = TRUE,
+		metric_label = toupper('f1'),
+		title = toupper('f1')
+	)
+g1 + g2 +	patchwork::plot_layout(guides = "collect") 
 
 
 # =========================================================================
