@@ -8,6 +8,7 @@ from fit_models import retrain_model
 
 os.environ['NIXTLA_ID_AS_COL'] = '1'
 
+# config = get_config('config/fit/TEST_retrain_sf_nab_config.yaml')
 config = get_config('config/fit/retrain_sf_nab_config.yaml')
 configure_logging(
     config_file = 'config/log_config.yaml', 

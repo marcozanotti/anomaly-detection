@@ -4,14 +4,14 @@ dataset: {
     frequency: 'yearly',
     min_series_length: null,
     max_series_length: null,
-    samples: 2,
+    samples: null,
     ext: '.parquet',
     seed: 1992
 }
 
 fitting: {
-    'retrain_scenarios': [1],
-    levels: [95, 99],
+    'retrain_scenarios': [96],
+    levels: [99, 99.5],
     combine_only: False
 }
 
@@ -20,8 +20,21 @@ model_names: [
     'ARIMA',
     'Theta',
     # 'CES',
-    'MFLES',
-    'TBATS'
+    # 'MFLES',
+    'TBATS',
+    'MSTL',
+    'EnsembleMean1',
+    'EnsembleMean2',
+    'EnsembleMean3',
+    'EnsembleMean4',
+    'EnsembleMean5',
+    'EnsembleMean6',
+    'EnsembleMean7',
+    'EnsembleMean8',
+    'EnsembleMean9',
+    'EnsembleMean10',
+    'EnsembleMean11',
+    'EnsembleMean12'
 ]
 
 evaluation: {

@@ -5,30 +5,26 @@ dataset: {
 }
 
 fitting: {
-    'retrain_scenarios': [1],
-    'levels': [95, 99]
+    'retrain_scenarios': [96],
+    'levels': [99, 99.5]
 }
 
 ensembling: {
     'model_names': [
         ['ETS', 'ARIMA'],
+        ['ETS', 'Theta'],
+        ['ARIMA', 'Theta'],
+        ['ARIMA', 'TBATS'],
         ['ETS', 'ARIMA', 'Theta'],
         ['ETS', 'ARIMA', 'TBATS'],
-        ['ETS', 'ARIMA', 'MFLES'],
         ['ETS', 'ARIMA', 'MSTL'],
+        ['ARIMA', 'Theta', 'TBATS'],
         ['ETS', 'ARIMA', 'Theta', 'TBATS'],
-        ['ETS', 'ARIMA', 'Theta', 'MFLES'],
         ['ETS', 'ARIMA', 'Theta', 'MSTL'],
-        ['ETS', 'ARIMA', 'TBATS', 'MFLES'],
-        ['ETS', 'ARIMA', 'TBATS', 'MSTL'],
-        ['ETS', 'ARIMA', 'MFLES', 'MSTL'],
-        ['ETS', 'ARIMA', 'Theta', 'TBATS', 'MFLES'],
-        ['ETS', 'ARIMA', 'Theta', 'TBATS', 'MSTL'],
-        ['ETS', 'ARIMA', 'Theta', 'MFLES', 'MSTL'],
-        ['ETS', 'ARIMA', 'TBATS', 'MFLES', 'MSTL'],
-        ['ETS', 'ARIMA', 'Theta', 'TBATS', 'MFLES', 'MSTL']
+        ['ARIMA', 'Theta', 'TBATS', 'MSTL'],
+        ['ETS', 'ARIMA', 'Theta', 'TBATS', 'MSTL']
     ],
     'methods': ['mean'], 
-    'name': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16'],
+    'name': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
     'anomaly_threshold': 0.5
 }

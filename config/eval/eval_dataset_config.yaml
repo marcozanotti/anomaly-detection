@@ -9,6 +9,19 @@ model_names: [
     'ARIMA',
     'Theta',
     # 'CES',
-    'MFLES',
-    'TBATS'
+    # 'MFLES',
+    'TBATS',
+    'MSTL',
+    'EnsembleMean1',
+    'EnsembleMean2',
+    'EnsembleMean3',
+    'EnsembleMean4',
+    'EnsembleMean5',
+    'EnsembleMean6',
+    'EnsembleMean7',
+    'EnsembleMean8',
+    'EnsembleMean9',
+    'EnsembleMean10',
+    'EnsembleMean11',
+    'EnsembleMean12'
 ]

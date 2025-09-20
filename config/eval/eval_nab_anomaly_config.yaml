@@ -5,8 +5,8 @@ dataset: {
 }
 
 fitting: {
-    'retrain_scenarios': [1],
-    levels: [95, 99],
+    'retrain_scenarios': [96],
+    levels: [99, 99.5],
     combine_only: False
 }
 
@@ -15,8 +15,9 @@ model_names: [
     'ARIMA',
     'Theta',
     # 'CES',
-    'MFLES',
+    # 'MFLES',
     'TBATS', 
+    'MSTL',
     'EnsembleMean1',
     'EnsembleMean2',
     'EnsembleMean3',
@@ -24,7 +25,11 @@ model_names: [
     'EnsembleMean5',
     'EnsembleMean6',
     'EnsembleMean7',
-    'EnsembleMean8'
+    'EnsembleMean8',
+    'EnsembleMean9',
+    'EnsembleMean10',
+    'EnsembleMean11',
+    'EnsembleMean12'
 ]
 
 evaluation: {
