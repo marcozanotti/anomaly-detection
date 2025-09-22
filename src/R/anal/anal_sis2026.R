@@ -66,14 +66,18 @@ g1 <- anom_res$tests |>
 		facet = TRUE,
 		metric_label = toupper('accuracy'),
 		title = toupper('accuracy')
-	)
+	) +
+	ggplot2::scale_x_discrete(labels = c('interval', 'voting')) +
+	ggplot2::labs(x = '')
 g2 <- anom_res$tests |> 
 	plot_test_anomaly_results(
 		.metric = 'f1', 
 		facet = TRUE,
 		metric_label = toupper('f1'),
 		title = toupper('f1')
-	)
+	) +
+	ggplot2::scale_x_discrete(labels = c('interval', 'voting')) +
+	ggplot2::labs(x = '')
 g1 + g2 +	patchwork::plot_layout(guides = "collect") 
 
 
